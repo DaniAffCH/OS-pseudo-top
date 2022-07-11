@@ -18,6 +18,11 @@ int main()
 
     attroff(COLOR_PAIR(1));
 
+
+    //CPU usage 
+    
+
+
 	getch();			/* Wait for user input */
 	endwin();			/* End curses mode */
 
