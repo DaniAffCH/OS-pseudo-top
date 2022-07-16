@@ -1,7 +1,11 @@
 #include "ncurses_handler.h"
 #include <stdlib.h>
+#include "linked_list.h"
+#include "update.h"
+
 int main()
 {	
+    /*
     nc_init();
 
     init_pair(1, COLOR_BLACK, COLOR_MAGENTA);
@@ -20,11 +24,16 @@ int main()
 
 
     //CPU usage 
+    */
+
+
+	//getch();			/* Wait for user input */
+	//endwin();			/* End curses mode */
     
-
-
-	getch();			/* Wait for user input */
-	endwin();			/* End curses mode */
+    ListHead * lh = (ListHead*) malloc(sizeof(ListHead));
+    List_init(lh);
+    updateProcList(lh);
+    free(lh);
 
 	return 0;
 }

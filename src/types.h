@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sys/types.h>
+#include "linked_list.h"
 
 typedef enum{
     READY,
@@ -14,5 +15,10 @@ typedef struct pt_proc
     pid_t pid;
     pt_state state;
     u_int8_t cpu_usage;
-    u_int64_t memory_usage; //memory usage is intended as stack size + heap size
+    u_int64_t memory_usage;
 } pt_proc_t;
+
+typedef struct procListItem{
+  ListItem list;
+  pt_proc_t *info;
+} procListItem;
