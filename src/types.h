@@ -4,11 +4,17 @@
 #include "linked_list.h"
 
 typedef enum{
-    READY,
-    TERMINATED,
-    KILLED,
-    PAUSE
+  READY,
+  SLEEPING
 } pt_state;
+
+
+typedef enum{
+  PAUSE,
+  RESUME,
+  TERMINATE,
+  KILL
+} pt_action;
 
 typedef struct pt_proc
 {
