@@ -19,7 +19,7 @@
 #define TIME_OFFT 11
 #define START_TIME_OFFT 6
 #define TASK_COMM_LEN 64
-#define SLEEPING_TIME 2
+#define SLEEPING_TIME 1
 
 
 void updateProcList(ListHead * l); //side effect on list 

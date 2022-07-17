@@ -8,6 +8,11 @@ typedef enum{
   SLEEPING
 } pt_state;
 
+typedef struct thread_params {
+  int* show_offt;
+  ListHead* list;
+} thread_params_t;
+
 
 typedef enum{
   PAUSE,
