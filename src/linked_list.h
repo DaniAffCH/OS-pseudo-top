@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/types.h>
+
 typedef struct ListItem {
   struct ListItem* prev;
   struct ListItem* next;
@@ -18,4 +20,4 @@ ListItem* List_detach(ListHead* head, ListItem* item);
 
 //EXTENDED METHODS
 void List_print(ListHead* head);
-procListItem* List_find_by_pid(ListHead* head, pid_t pid);
+ListItem* List_find_by_pid(ListHead* head, pid_t pid);

@@ -1,9 +1,11 @@
 #include "action_handler.h"
 
+//Not tested yet
+
 void actionHandler(pid_t pid, pt_action action, ListHead* l){
     int ret;
 
-    procListItem* item = List_find_by_pid(l, pid);
+    procListItem* item = (procListItem*) List_find_by_pid(l, pid);
 
     #ifdef DEBUG
     if(!item){

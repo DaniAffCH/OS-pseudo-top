@@ -91,12 +91,12 @@ void List_print(ListHead* head){
   printf("\n\n");
 }
 
-procListItem* List_find_by_pid(ListHead* head, pid_t pid){
+ListItem* List_find_by_pid(ListHead* head, pid_t pid){
   procListItem* it = (procListItem*) head->first;
 
   while(it){
     if(it->info->pid == pid)
-      return it;
+      return (ListItem*) it;
     it = (procListItem*) it->list.next;
   }
   return NULL;

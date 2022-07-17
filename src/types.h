@@ -19,7 +19,9 @@ typedef enum{
 typedef struct pt_proc
 {
     pid_t pid;
+    char* name;
     pt_state state;
+    u_int32_t pre_jiffies;
     u_int8_t cpu_usage;
     u_int64_t memory_usage;
 } pt_proc_t;

@@ -2,9 +2,9 @@ CC=gcc
 CCOPTS=--std=gnu99 -Wall -g -D DEBUG
 LINKED=-lncurses 
 
-OBJS= ncurses_handler.o update.o linked_list.o
+OBJS= ncurses_handler.o update.o linked_list.o action_handler.o
 
-HEADERS=types.h ncurses_handler.h update.h linked_list.h
+HEADERS=types.h ncurses_handler.h update.h linked_list.h action_handler.h
 
 BINDIR = ../bin
 
