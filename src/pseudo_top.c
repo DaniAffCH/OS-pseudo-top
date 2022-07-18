@@ -7,9 +7,13 @@
 
 int main()
 {	  
-    int ret,
-        show_offt = 0;
-    pthread_t th;
+    int ret;
+    volatile int
+        show_offt = 0,
+        running = 1,
+        input_req = 0;
+    pthread_t th_li;
+    char input[120];
 
     nc_init();
 
@@ -32,24 +36,44 @@ int main()
 
     print_header();
 
-    thread_params_t param = {.show_offt=&show_offt, .list=lh};
+    thread_il_params_t param = {.show_offt=&show_offt, .list=lh, .running=&running, .input_req=&input_req};
 
-    ret = pthread_create(&th, NULL, listener, &param);
+    ret = pthread_create(&th_li, NULL, listener, &param);
 
     if(ret != 0){
         printf("thread initialization failed \n");
         exit(1);
     }
 
-    while(1){
-        updateProcList(lh);
-        print_stats(lh, show_offt);
-        sleep(0.2);
+    //ret = pthread_create(&th_up, NULL, updateThread, (void*) lh);
+
+    if(ret != 0){
+        printf("thread initialization failed \n");
+        exit(1);
+    }
+
+    while(running){
+        if(input_req){
+            echo();
+            move(stdscr->_maxy,0);
+            curs_set(1);
+            getstr(input);
+
+            //chiama l'handler
+
+            noecho();
+            move(stdscr->_maxy,0);
+            clrtoeol();
+            input_req = 0;
+        }
+        else{
+            updateProcList(lh);
+            print_stats(lh, show_offt);
+        }
     }
 
     free(lh);
-	//getch();			/* Wait for user input */
-	//endwin();			/* End curses mode */
+	endwin();			/* End curses mode */
 
 	return 0;
 }

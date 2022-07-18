@@ -2,11 +2,11 @@
 
 void nc_init(){
     initscr(); // Start curses mode
-    raw(); // disable line buffering (get as soon as possible keyboard input)
+    //raw(); // disable line buffering (get as soon as possible keyboard input)
     noecho(); // disable echoing of input
     keypad(stdscr, TRUE); // enable arrows
     start_color(); // allow colors
-
+    curs_set(0); // Hide cursor
 }
 
 void print_centered(int row, const char* text){
@@ -36,7 +36,7 @@ void print_stats(ListHead * l, int show_offt){
     for(int j = 0; j<show_offt; ++j)
         current = (procListItem*) current->list.next;
     
-    while(current){
+    while(current && rowCnt < stdscr->_maxy){
         move(rowCnt,0);
         clrtoeol();
         sprintf(pid_str, "%d", current->info->pid);

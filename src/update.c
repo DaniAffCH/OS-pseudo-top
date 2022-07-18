@@ -1,5 +1,13 @@
 #include "update.h"
 
+void* updateThread(void* p){
+    ListHead *l = (ListHead*) p;
+    while(1){
+        updateProcList(l);
+        sleep(1);
+    }
+}
+
 static int isDigit(const char* s){
     while(*s){
         if(*s < '0' || *s > '9')
@@ -34,15 +42,15 @@ static u_int64_t getTotalCpuJiffies(){
     return totJiffies;
 }
 
-static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc){
+static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * error){
     char file_dir[268];
     char name[16];
     snprintf(file_dir, sizeof(file_dir), "%s/%s%s", DIR_PROC, pid, DIR_CPU_PROC);
     FILE* f = fopen(file_dir, "r");
     if(!f && errno){
-        printf("Error opening /proc/[PID]/stat file\n");
-        printf("%d",errno);
-        exit(-1);
+        //printf("Error opening /proc/[PID]/stat file\n");
+        *error = 1;
+        return 0;
     }
 
     unsigned long t1, t2;
@@ -62,7 +70,7 @@ static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc){
     return t1+t2+t3+t4;
 }
 
-static u_int64_t getProcessMemory(char* pid){
+static u_int64_t getProcessMemory(char* pid, u_int8_t * error){
     char* file_buffer = (char*) malloc(sysconf(_SC_PAGESIZE));
     char file_dir[268];
     u_int64_t mem;
@@ -72,8 +80,9 @@ static u_int64_t getProcessMemory(char* pid){
     FILE* f = fopen(file_dir, "r");
 
     if(!f && errno){
-        printf("Error opening stat file\n");
-        exit(-1);
+        //printf("Error opening stat file\n");
+        *error = 1;
+        return 0;
     }
 
     fgets(file_buffer, sysconf(_SC_PAGESIZE), f);
@@ -92,6 +101,7 @@ void updateProcList(ListHead * l){
     DIR *dr = opendir(DIR_PROC);
     procListItem *currentListItem = (procListItem*) l->first;
     procListItem *oldListItem = NULL;
+    u_int8_t error = 0;
 
     #ifdef DEBUG
         assert(l && "List Head is null");
@@ -99,8 +109,8 @@ void updateProcList(ListHead * l){
 
     while((de=readdir(dr))){
         if(errno){
-            printf("Error reading proc path\n");
-            exit(-1);
+            //printf("Error reading proc path\n");
+            continue;
         }
 
         if(!isDigit(de->d_name))
@@ -131,9 +141,19 @@ void updateProcList(ListHead * l){
 
         }
 
-        currentListItem->info->pre_jiffies = getProcessCpuJiffies(de->d_name,currentListItem->info);
+        currentListItem->info->pre_jiffies = getProcessCpuJiffies(de->d_name,currentListItem->info, &error);
 
-        currentListItem->info->memory_usage = getProcessMemory(de->d_name);
+        if(error){
+            error = 0;
+            continue;
+        }
+
+        currentListItem->info->memory_usage = getProcessMemory(de->d_name, &error);
+
+        if(error){
+            error = 0;
+            continue;
+        }
 
         oldListItem = currentListItem;
         currentListItem = (procListItem*) currentListItem->list.next;
@@ -149,9 +169,14 @@ void updateProcList(ListHead * l){
 
     while(currentListItem){
         sprintf(pid_str, "%d", currentListItem->info->pid);
-        post_jiffies = getProcessCpuJiffies(pid_str,currentListItem->info);
+        post_jiffies = getProcessCpuJiffies(pid_str,currentListItem->info, &error);
 
-        currentListItem->info->cpu_usage = 100*( (float)(post_jiffies - currentListItem->info->pre_jiffies)/(float)(sysJ_t1 - sysJ_t0)  );
+        if(error){
+            error = 0;
+            continue;
+        }
+
+        currentListItem->info->cpu_usage = 100*( (double)(post_jiffies - currentListItem->info->pre_jiffies)/(double)(sysJ_t1 - sysJ_t0)  );
 
         #ifdef DEBUG
         printf("[%s] (%s) cpu usage:%u memory usage:%lu\n", pid_str, currentListItem->info->name, currentListItem->info->cpu_usage, currentListItem->info->memory_usage);
@@ -159,5 +184,7 @@ void updateProcList(ListHead * l){
 
         currentListItem = (procListItem*) currentListItem->list.next;
     }
+
+    closedir(dr);
 
 }

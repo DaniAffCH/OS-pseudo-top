@@ -23,3 +23,5 @@
 
 
 void updateProcList(ListHead * l); //side effect on list 
+
+void* updateThread(void* p);
