@@ -22,13 +22,10 @@ static u_int64_t getTotalCpuJiffies(){
     FILE* f = fopen(DIR_SYS_STAT, "r");
     u_int64_t cpuJiffiesComponent[10];
     u_int64_t totJiffies = 0;
-    if(!f && errno){
-        printf("Error opening /proc/stat file\n");
-        endwin();
-        exit(-1);
-    }
+    char file_buffer[sysconf(_SC_PAGESIZE)];
+    if(!f && errno)
+        my_exit(-1, "Error opening /proc/stat file");
 
-    char* file_buffer = (char*) malloc(sysconf(_SC_PAGESIZE));
     fgets(file_buffer, sysconf(_SC_PAGESIZE), f);
 
     //EXAMPLE:           cpu  33684 689 19310 3125058 1025 0 1434 0 0 0
@@ -41,7 +38,6 @@ static u_int64_t getTotalCpuJiffies(){
     
    totJiffies = cpuJiffiesComponent[0];
 
-    free(file_buffer);
     fclose(f);
 
     return totJiffies;
@@ -51,6 +47,7 @@ static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * er
     char file_dir[268];
     char name[16];
     char state;
+    char file_buffer[sysconf(_SC_PAGESIZE)];
     snprintf(file_dir, sizeof(file_dir), "%s/%s%s", DIR_PROC, pid, DIR_CPU_PROC);
     FILE* f = fopen(file_dir, "r");
     if(!f && errno){
@@ -62,12 +59,10 @@ static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * er
     unsigned long t1, t2;
     long t3, t4;
 
-    char* file_buffer = (char*) malloc(sysconf(_SC_PAGESIZE));
     fgets(file_buffer, sysconf(_SC_PAGESIZE), f);
 
     sscanf(file_buffer, "%*d (%[^\t\n()]) %c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %ld %ld", name, &state, &t1, &t2, &t3, &t4);
 
-    free(file_buffer);
     fclose(f);
 
     if(state == 'S' || state == 'D' || state == 'R')
@@ -77,14 +72,15 @@ static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * er
     else
         proc->state=INACTIVE;
 
-    strcpy(proc->name, name);
+    if(!proc->name[0])
+        strcpy(proc->name, name);
 
     //return t1+t2+t3+t4; considering all time components
     return t1;
 }
 
 static u_int64_t getProcessMemory(char* pid, u_int8_t * error){
-    char* file_buffer = (char*) malloc(sysconf(_SC_PAGESIZE));
+    char file_buffer[sysconf(_SC_PAGESIZE)];
     char file_dir[268];
     u_int64_t mem;
 
@@ -103,7 +99,6 @@ static u_int64_t getProcessMemory(char* pid, u_int8_t * error){
     sscanf(file_buffer, "%lu ", &mem);
 
     fclose(f);
-    free(file_buffer);
 
     return mem;
 }
@@ -115,6 +110,8 @@ void updateProcList(ListHead * l){
     procListItem *currentListItem = (procListItem*) l->first;
     procListItem *oldListItem = NULL;
     u_int8_t error = 0;
+
+    extern pthread_mutex_t listMutex;
 
     #ifdef DEBUG
         assert(l && "List Head is null");
@@ -132,23 +129,26 @@ void updateProcList(ListHead * l){
 
             if(currentListItem == NULL || currentListItem->info->pid > atoi(de->d_name)){
                 // new process untracked found
+                pthread_mutex_lock(&listMutex);
                 procListItem * newListItem = (procListItem*) malloc(sizeof(procListItem));
                 newListItem->list.next = NULL; newListItem->list.prev = NULL;
                 newListItem->info = (pt_proc_t*) malloc(sizeof(pt_proc_t));
                 newListItem->info->pid = atoi(de->d_name);
                 newListItem->info->state = READY;
-                newListItem->info->name = (char*) malloc(TASK_COMM_LEN);
+                newListItem->info->name[0] = 0;
 
                 currentListItem = (procListItem*) List_insert(l, (ListItem*) oldListItem, (ListItem*) newListItem);
+                pthread_mutex_unlock(&listMutex);
             }
             else{
                 // a tracked process has been deleted 
-                procListItem * oldListItem = currentListItem;
+                pthread_mutex_lock(&listMutex);
+                procListItem * remListItem = currentListItem;
                 currentListItem = (procListItem*) currentListItem->list.next;
-                List_detach(l, (ListItem*) oldListItem);
-                free(oldListItem->info->name);
-                free(oldListItem->info);
-                free(oldListItem);
+                List_detach(l, (ListItem*) remListItem);
+                free(remListItem->info);
+                free(remListItem);
+                pthread_mutex_unlock(&listMutex);
             }
 
         }

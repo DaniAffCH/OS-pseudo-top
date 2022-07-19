@@ -5,6 +5,10 @@
 #include "input_listener.h"
 #include "action_handler.h"
 #include <pthread.h>
+#include "exit_routine.h"
+
+ListHead * lh;
+pthread_mutex_t listMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int main()
 {	  
@@ -24,12 +28,8 @@ int main()
 
     init_pair(1, COLOR_BLACK, COLOR_MAGENTA);
 
-    if (has_colors() == FALSE) {
-        endwin();
-        printf("Your terminal does not support color\n");
-        endwin();
-        exit(1);
-    }
+    if (has_colors() == FALSE) 
+        my_exit(-1, "Your terminal doesn't support color");
 
     attron(COLOR_PAIR(1));
 
@@ -37,7 +37,7 @@ int main()
 
     attroff(COLOR_PAIR(1));
 
-    ListHead * lh = (ListHead*) malloc(sizeof(ListHead));
+    lh = (ListHead*) malloc(sizeof(ListHead));
     List_init(lh);
 
     print_header();
@@ -46,20 +46,14 @@ int main()
 
     ret = pthread_create(&th_li, NULL, listener, &param);
 
-    if(ret != 0){
-        printf("thread initialization failed \n");
-        endwin();
-        exit(-1);
-    }
+    if(ret != 0)
+        my_exit(-1, "Thread initialization failed");
 
     #ifdef TH
     ret = pthread_create(&th_up, NULL, updateThread, (void*)lh);
 
-    if(ret != 0){
-        printf("thread initialization failed \n");
-        endwin();
-        exit(-1);
-    }
+    if(ret != 0)
+        my_exit(-1, "Thread initialization failed");
     #endif
 
     while(running){
@@ -78,14 +72,15 @@ int main()
             input_req = 0;
         }
         else{
+            pthread_mutex_lock(&listMutex);
             print_stats(lh, show_offt);
+            sleep(0.2);
+            pthread_mutex_unlock(&listMutex);
             #ifndef TH
             updateProcList(lh);
             #endif
         }
     }
 
-	endwin();			/* End curses mode */
-
-	return 0;
+	my_exit(0, NULL);
 }

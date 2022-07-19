@@ -22,11 +22,8 @@ void actionHandler(pid_t pid, pt_action action, ListHead* l){
     procListItem* item = (procListItem*) List_find_by_pid(l, pid);
 
     #ifdef DEBUG
-    if(!item){
-        printf("Pid not found\n");
-        endwin();
-        exit(-1);
-    }
+    if(!item)
+        my_exit(-1, "Pid not found");
     #endif  
 
     switch (action)
@@ -34,12 +31,8 @@ void actionHandler(pid_t pid, pt_action action, ListHead* l){
     case PAUSE:
         if(item->info->state == READY){
             ret = kill(pid, SIGSTOP);
-            if(ret == -1){
-                printf("Signal send failed\n");
-                endwin();
-                exit(-1);
-            }
-
+            if(ret == -1)
+                my_exit(-1, "Signal send failed");
             item->info->state = SLEEPING;
         }
 
@@ -48,12 +41,8 @@ void actionHandler(pid_t pid, pt_action action, ListHead* l){
 
         if(item->info->state == SLEEPING){
             ret = kill(pid, SIGCONT);
-            if(ret == -1){
-                printf("Signal send failed\n");
-                endwin();
-                exit(-1);
-                
-            }
+            if(ret == -1)
+                my_exit(-1, "Signal send failed");
 
             item->info->state = READY;
         }
@@ -61,25 +50,18 @@ void actionHandler(pid_t pid, pt_action action, ListHead* l){
         break;
     case KILL:
         ret = kill(pid, SIGKILL);
-        if(ret == -1){
-            printf("Signal send failed\n");
-            exit(-1);
-        }
+        if(ret == -1)
+            my_exit(-1, "Signal send failed");
         item->info->state = INACTIVE;
         break;
     case TERMINATE:
         ret = kill(pid, SIGTERM);
-        if(ret == -1){
-            printf("Signal send failed\n");
-            endwin();
-            exit(-1);
-        }
+        if(ret == -1)
+            my_exit(-1, "Signal send failed");
         item->info->state = INACTIVE;
         break;
     default:
-        printf("unknown action");
-        endwin();
-        exit(-1);
+        my_exit(-1, "Signal send failed");
         break;
     }
 }

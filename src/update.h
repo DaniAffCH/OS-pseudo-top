@@ -2,6 +2,7 @@
 
 #include "linked_list.h"
 #include "types.h"
+#include "exit_routine.h"
 #include <dirent.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -12,6 +13,7 @@
 #include <assert.h>
 #include <sys/prctl.h>
 #include <ncurses.h>
+#include <pthread.h>
 
 #define DIR_PROC "/proc"
 #define DIR_CPU_PROC "/stat"
@@ -19,7 +21,6 @@
 #define DIR_SYS_STAT "/proc/stat"
 #define TIME_OFFT 11
 #define START_TIME_OFFT 6
-#define TASK_COMM_LEN 64
 #define SLEEPING_TIME 1
 
 

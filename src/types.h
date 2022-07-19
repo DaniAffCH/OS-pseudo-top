@@ -3,6 +3,9 @@
 #include <sys/types.h>
 #include "linked_list.h"
 
+#define TASK_COMM_LEN 64
+
+
 typedef enum{
   READY,
   SLEEPING,
@@ -26,7 +29,7 @@ typedef enum{
 typedef struct pt_proc
 {
     pid_t pid;
-    char* name;
+    char name[TASK_COMM_LEN];
     pt_state state;
     u_int32_t pre_jiffies;
     u_int8_t cpu_usage;
