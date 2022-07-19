@@ -33,13 +33,15 @@ static u_int64_t getTotalCpuJiffies(){
     //EXAMPLE:           cpu  33684 689 19310 3125058 1025 0 1434 0 0 0
     sscanf(file_buffer, "cpu  %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu", &cpuJiffiesComponent[0], &cpuJiffiesComponent[1], &cpuJiffiesComponent[2], &cpuJiffiesComponent[3], &cpuJiffiesComponent[4], &cpuJiffiesComponent[5], &cpuJiffiesComponent[6], &cpuJiffiesComponent[7], &cpuJiffiesComponent[8], &cpuJiffiesComponent[9]);
 
+    /* Considering all time components
     for(int i = 0; i<10; ++i)
         totJiffies+= cpuJiffiesComponent[i];
+    */
     
     free(file_buffer);
     fclose(f);
 
-    return totJiffies;
+    return cpuJiffiesComponent[0];
 }
 
 static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * error){
@@ -74,7 +76,8 @@ static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * er
 
     strcpy(proc->name, name);
 
-    return t1+t2+t3+t4;
+    //return t1+t2+t3+t4; considering all time components
+    return t1;
 }
 
 static u_int64_t getProcessMemory(char* pid, u_int8_t * error){

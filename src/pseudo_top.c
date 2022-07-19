@@ -14,6 +14,9 @@ int main()
         running = 1,
         input_req = 0;
     pthread_t th_li;
+    #ifdef TH
+    pthread_t th_up;
+    #endif
     pid_t pid;
     char action[30];
     char input[120];
@@ -45,8 +48,17 @@ int main()
 
     if(ret != 0){
         printf("thread initialization failed \n");
-        exit(1);
+        exit(-1);
     }
+
+    #ifdef TH
+    ret = pthread_create(&th_up, NULL, updateThread, (void*)lh);
+
+    if(ret != 0){
+        printf("thread initialization failed \n");
+        exit(-1);
+    }
+    #endif
 
     while(running){
         if(input_req){
@@ -64,8 +76,10 @@ int main()
             input_req = 0;
         }
         else{
-            updateProcList(lh);
             print_stats(lh, show_offt);
+            #ifndef TH
+            updateProcList(lh);
+            #endif
         }
     }
 
