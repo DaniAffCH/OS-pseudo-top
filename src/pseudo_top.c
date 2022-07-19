@@ -9,6 +9,7 @@
 
 ListHead * lh;
 pthread_mutex_t listMutex = PTHREAD_MUTEX_INITIALIZER;
+int nMalloc, nFree;
 
 int main()
 {	  
@@ -24,6 +25,9 @@ int main()
     char action[30];
     char input[120];
 
+    lh = (ListHead*) malloc(sizeof(ListHead));
+    List_init(lh);
+
     nc_init();
 
     init_pair(1, COLOR_BLACK, COLOR_MAGENTA);
@@ -36,9 +40,6 @@ int main()
 	print_centered(0, "PSEUDO TOP");
 
     attroff(COLOR_PAIR(1));
-
-    lh = (ListHead*) malloc(sizeof(ListHead));
-    List_init(lh);
 
     print_header();
 
@@ -70,11 +71,11 @@ int main()
             move(stdscr->_maxy,0);
             clrtoeol();
             input_req = 0;
+            curs_set(0);
         }
         else{
             pthread_mutex_lock(&listMutex);
             print_stats(lh, show_offt);
-            sleep(0.2);
             pthread_mutex_unlock(&listMutex);
             #ifndef TH
             updateProcList(lh);

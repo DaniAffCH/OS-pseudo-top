@@ -54,7 +54,7 @@ void print_stats(ListHead * l, int show_offt){
         }
         state_str[1]='\0';
                 
-        sprintf(row, "|%7.7s|%32.32s|%4.4s%%|%13.13s|%5.5s|", pid_str, current->info->name, cpu_str, mem_str, state_str);
+        sprintf(row, "|%7.7s|%32.31s|%4.4s%%|%13.13s|%5.5s|", pid_str, current->info->name, cpu_str, mem_str, state_str);
 
         print_centered(rowCnt, row);
 

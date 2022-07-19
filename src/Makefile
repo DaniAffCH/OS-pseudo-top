@@ -1,10 +1,10 @@
 CC=gcc
-CCOPTS=--std=gnu99 -Wall -g -D NODEBUG -D TH
+CCOPTS=--std=gnu99 -Wall -g -D NODEBUG -D TH -ggdb3
 LINKED=-lncurses 
 
-OBJS= ncurses_handler.o update.o linked_list.o action_handler.o input_listener.o
+OBJS= ncurses_handler.o update.o linked_list.o action_handler.o input_listener.o exit_routine.o
 
-HEADERS=types.h ncurses_handler.h update.h linked_list.h action_handler.h input_listener.h
+HEADERS=types.h ncurses_handler.h update.h linked_list.h action_handler.h input_listener.h exit_routine.h
 
 BINDIR = ../bin
 

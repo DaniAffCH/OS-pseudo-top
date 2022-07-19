@@ -1,5 +1,7 @@
 #include "update.h"
 
+u_int64_t lastCpuJiffies = 0;
+
 void* updateThread(void* p){
     ListHead *l = (ListHead*) p;
     while(1){
@@ -36,7 +38,7 @@ static u_int64_t getTotalCpuJiffies(){
         totJiffies+= cpuJiffiesComponent[i];
     */
     
-   totJiffies = cpuJiffiesComponent[0];
+    totJiffies = cpuJiffiesComponent[0];
 
     fclose(f);
 
@@ -51,7 +53,6 @@ static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * er
     snprintf(file_dir, sizeof(file_dir), "%s/%s%s", DIR_PROC, pid, DIR_CPU_PROC);
     FILE* f = fopen(file_dir, "r");
     if(!f && errno){
-        //printf("Error opening /proc/[PID]/stat file\n");
         *error = 1;
         return 0;
     }
@@ -89,7 +90,6 @@ static u_int64_t getProcessMemory(char* pid, u_int8_t * error){
     FILE* f = fopen(file_dir, "r");
 
     if(!f && errno){
-        //printf("Error opening stat file\n");
         *error = 1;
         return 0;
     }
@@ -104,19 +104,24 @@ static u_int64_t getProcessMemory(char* pid, u_int8_t * error){
 }
 
 void updateProcList(ListHead * l){
-    u_int64_t sysJ_t0 = getTotalCpuJiffies();
+    extern int nMalloc; extern int nFree;
+    extern pthread_mutex_t listMutex;
+    pthread_mutex_lock(&listMutex);
+    u_int64_t currentCpuJiffies = getTotalCpuJiffies();
     struct dirent *de;
     DIR *dr = opendir(DIR_PROC);
+
+    if(!dr)
+        my_exit(-1, "Error opening /proc directory");
+
     procListItem *currentListItem = (procListItem*) l->first;
     procListItem *oldListItem = NULL;
     u_int8_t error = 0;
-
-    extern pthread_mutex_t listMutex;
+    u_int32_t currentJiffies = 0;
 
     #ifdef DEBUG
         assert(l && "List Head is null");
     #endif
-
     while((de=readdir(dr))){
         if(!de && errno){
             continue;
@@ -129,31 +134,29 @@ void updateProcList(ListHead * l){
 
             if(currentListItem == NULL || currentListItem->info->pid > atoi(de->d_name)){
                 // new process untracked found
-                pthread_mutex_lock(&listMutex);
                 procListItem * newListItem = (procListItem*) malloc(sizeof(procListItem));
                 newListItem->list.next = NULL; newListItem->list.prev = NULL;
                 newListItem->info = (pt_proc_t*) malloc(sizeof(pt_proc_t));
                 newListItem->info->pid = atoi(de->d_name);
                 newListItem->info->state = READY;
-                newListItem->info->name[0] = 0;
-
+                memset(newListItem->info->name, 0, TASK_COMM_LEN);
+                newListItem->info->pre_jiffies = 0;
+                ++nMalloc;
                 currentListItem = (procListItem*) List_insert(l, (ListItem*) oldListItem, (ListItem*) newListItem);
-                pthread_mutex_unlock(&listMutex);
             }
             else{
                 // a tracked process has been deleted 
-                pthread_mutex_lock(&listMutex);
                 procListItem * remListItem = currentListItem;
                 currentListItem = (procListItem*) currentListItem->list.next;
                 List_detach(l, (ListItem*) remListItem);
                 free(remListItem->info);
                 free(remListItem);
-                pthread_mutex_unlock(&listMutex);
+                ++nFree;
             }
 
         }
 
-        currentListItem->info->pre_jiffies = getProcessCpuJiffies(de->d_name,currentListItem->info, &error);
+        currentJiffies = getProcessCpuJiffies(de->d_name,currentListItem->info, &error);
 
         if(error){
             error = 0;
@@ -167,36 +170,19 @@ void updateProcList(ListHead * l){
             continue;
         }
 
+        if(!lastCpuJiffies)
+            currentListItem->info->cpu_usage = 0;
+        else
+            currentListItem->info->cpu_usage = 100*( (double)(currentJiffies - currentListItem->info->pre_jiffies)/(double)(currentCpuJiffies - lastCpuJiffies)  );
+        
+
+        currentListItem->info->pre_jiffies = currentJiffies;
+
         oldListItem = currentListItem;
         currentListItem = (procListItem*) currentListItem->list.next;
     }
+    lastCpuJiffies = currentCpuJiffies;
 
-    sleep(SLEEPING_TIME);
-
-    u_int64_t sysJ_t1 = getTotalCpuJiffies();
-    u_int64_t post_jiffies;
-    char pid_str[16];
-
-    currentListItem = (procListItem*) l->first;
-
-    while(currentListItem){
-        sprintf(pid_str, "%d", currentListItem->info->pid);
-        post_jiffies = getProcessCpuJiffies(pid_str,currentListItem->info, &error);
-
-        if(error){
-            error = 0;
-            continue;
-        }
-
-        currentListItem->info->cpu_usage = 100*( (double)(post_jiffies - currentListItem->info->pre_jiffies)/(double)(sysJ_t1 - sysJ_t0)  );
-
-        #ifdef DEBUG
-        printf("[%s] (%s) cpu usage:%u memory usage:%lu\n", pid_str, currentListItem->info->name, currentListItem->info->cpu_usage, currentListItem->info->memory_usage);
-        #endif
-
-        currentListItem = (procListItem*) currentListItem->list.next;
-    }
-
+    pthread_mutex_unlock(&listMutex);
     closedir(dr);
-
 }
