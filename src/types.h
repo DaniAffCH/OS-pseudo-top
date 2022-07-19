@@ -5,7 +5,8 @@
 
 typedef enum{
   READY,
-  SLEEPING
+  SLEEPING,
+  INACTIVE
 } pt_state;
 
 typedef struct thread_il_params {

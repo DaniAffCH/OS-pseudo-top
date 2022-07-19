@@ -2,6 +2,20 @@
 
 //Not tested yet
 
+void actionWrapper(pid_t pid, char* action, ListHead* l){
+    pt_action act;
+    if(strcmp(action, "pause") == 0)
+        act = PAUSE;
+    else if(strcmp(action, "resume") == 0)
+        act = RESUME;
+    else if(strcmp(action, "terminate") == 0)
+        act = TERMINATE;
+    else if(strcmp(action, "kill") == 0)
+        act = KILL;
+    
+    actionHandler(pid, act, l);
+}
+
 void actionHandler(pid_t pid, pt_action action, ListHead* l){
     int ret;
 

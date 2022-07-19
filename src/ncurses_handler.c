@@ -31,7 +31,7 @@ void print_stats(ListHead * l, int show_offt){
     char pid_str[18],
          cpu_str[16],
          mem_str[14],
-         state_str[] = "R";
+         state_str[2];
 
     for(int j = 0; j<show_offt; ++j)
         current = (procListItem*) current->list.next;
@@ -42,9 +42,18 @@ void print_stats(ListHead * l, int show_offt){
         sprintf(pid_str, "%d", current->info->pid);
         sprintf(cpu_str, "%hu", current->info->cpu_usage);
         sprintf(mem_str, "%lu", current->info->memory_usage);
-        
-        //sprintf(pid_str, "%u", current->info->pid);
-        
+
+        switch (current->info->state){
+            case READY:
+                state_str[0]='R';break;
+            case SLEEPING:
+                state_str[0]='S';break;
+            case INACTIVE:
+                state_str[0]='I';break;
+            default: break;
+        }
+        state_str[1]='\0';
+                
         sprintf(row, "|%7.7s|%32.32s|%4.4s%%|%13.13s|%5.5s|", pid_str, current->info->name, cpu_str, mem_str, state_str);
 
         print_centered(rowCnt, row);

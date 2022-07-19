@@ -45,6 +45,7 @@ static u_int64_t getTotalCpuJiffies(){
 static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * error){
     char file_dir[268];
     char name[16];
+    char state;
     snprintf(file_dir, sizeof(file_dir), "%s/%s%s", DIR_PROC, pid, DIR_CPU_PROC);
     FILE* f = fopen(file_dir, "r");
     if(!f && errno){
@@ -59,11 +60,17 @@ static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * er
     char* file_buffer = (char*) malloc(sysconf(_SC_PAGESIZE));
     fgets(file_buffer, sysconf(_SC_PAGESIZE), f);
 
-    sscanf(file_buffer, "%*d (%[^\t\n()]) %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %ld %ld", name, &t1, &t2, &t3, &t4);
+    sscanf(file_buffer, "%*d (%[^\t\n()]) %c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %ld %ld", name, &state, &t1, &t2, &t3, &t4);
 
     free(file_buffer);
     fclose(f);
 
+    if(state == 'S' || state == 'D' || state == 'R')
+        proc->state=READY;
+    else if(state == 'T')
+        proc->state=SLEEPING;
+    else
+        proc->state=INACTIVE;
 
     strcpy(proc->name, name);
 
@@ -108,8 +115,7 @@ void updateProcList(ListHead * l){
     #endif
 
     while((de=readdir(dr))){
-        if(errno){
-            //printf("Error reading proc path\n");
+        if(!de && errno){
             continue;
         }
 

@@ -3,6 +3,7 @@
 #include "linked_list.h"
 #include "update.h"
 #include "input_listener.h"
+#include "action_handler.h"
 #include <pthread.h>
 
 int main()
@@ -13,6 +14,8 @@ int main()
         running = 1,
         input_req = 0;
     pthread_t th_li;
+    pid_t pid;
+    char action[30];
     char input[120];
 
     nc_init();
@@ -45,13 +48,6 @@ int main()
         exit(1);
     }
 
-    //ret = pthread_create(&th_up, NULL, updateThread, (void*) lh);
-
-    if(ret != 0){
-        printf("thread initialization failed \n");
-        exit(1);
-    }
-
     while(running){
         if(input_req){
             echo();
@@ -59,7 +55,8 @@ int main()
             curs_set(1);
             getstr(input);
 
-            //chiama l'handler
+            sscanf(input, "%s %d", action, &pid);
+            actionWrapper(pid, action, lh);
 
             noecho();
             move(stdscr->_maxy,0);
