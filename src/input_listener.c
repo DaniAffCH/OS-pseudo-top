@@ -10,11 +10,14 @@ void* listener(void * args){
             sleep(1);
             continue;
         }
-        ch = getch();
-        if(ch == KEY_UP){
+
+        //avoid ncurses getch that trigger a racecondition
+        ch = getchar();
+
+        if(ch == 'w'){
             *(args_c->show_offt) = MAX(0, *(args_c->show_offt) - 1);
         }
-        else if(ch == KEY_DOWN){
+        else if(ch == 's'){
             max_offt = MAX(0, args_c->list->size - stdscr->_maxy + 3);
             *(args_c->show_offt) = MIN(max_offt, *(args_c->show_offt) + 1);
         }

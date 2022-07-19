@@ -24,6 +24,7 @@ void actionHandler(pid_t pid, pt_action action, ListHead* l){
     #ifdef DEBUG
     if(!item){
         printf("Pid not found\n");
+        endwin();
         exit(-1);
     }
     #endif  
@@ -35,6 +36,7 @@ void actionHandler(pid_t pid, pt_action action, ListHead* l){
             ret = kill(pid, SIGSTOP);
             if(ret == -1){
                 printf("Signal send failed\n");
+                endwin();
                 exit(-1);
             }
 
@@ -48,7 +50,9 @@ void actionHandler(pid_t pid, pt_action action, ListHead* l){
             ret = kill(pid, SIGCONT);
             if(ret == -1){
                 printf("Signal send failed\n");
+                endwin();
                 exit(-1);
+                
             }
 
             item->info->state = READY;
@@ -61,16 +65,20 @@ void actionHandler(pid_t pid, pt_action action, ListHead* l){
             printf("Signal send failed\n");
             exit(-1);
         }
+        item->info->state = INACTIVE;
         break;
     case TERMINATE:
         ret = kill(pid, SIGTERM);
         if(ret == -1){
             printf("Signal send failed\n");
+            endwin();
             exit(-1);
         }
+        item->info->state = INACTIVE;
         break;
     default:
         printf("unknown action");
+        endwin();
         exit(-1);
         break;
     }

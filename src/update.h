@@ -11,6 +11,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/prctl.h>
+#include <ncurses.h>
 
 #define DIR_PROC "/proc"
 #define DIR_CPU_PROC "/stat"

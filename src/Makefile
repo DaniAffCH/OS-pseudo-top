@@ -1,5 +1,5 @@
 CC=gcc
-CCOPTS=--std=gnu99 -Wall -g -D NODEBUG -D NOTH
+CCOPTS=--std=gnu99 -Wall -g -D NODEBUG -D TH
 LINKED=-lncurses 
 
 OBJS= ncurses_handler.o update.o linked_list.o action_handler.o input_listener.o

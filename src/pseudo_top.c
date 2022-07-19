@@ -9,8 +9,7 @@
 int main()
 {	  
     int ret;
-    volatile int
-        show_offt = 0,
+    int show_offt = 0,
         running = 1,
         input_req = 0;
     pthread_t th_li;
@@ -28,6 +27,7 @@ int main()
     if (has_colors() == FALSE) {
         endwin();
         printf("Your terminal does not support color\n");
+        endwin();
         exit(1);
     }
 
@@ -48,6 +48,7 @@ int main()
 
     if(ret != 0){
         printf("thread initialization failed \n");
+        endwin();
         exit(-1);
     }
 
@@ -56,6 +57,7 @@ int main()
 
     if(ret != 0){
         printf("thread initialization failed \n");
+        endwin();
         exit(-1);
     }
     #endif
@@ -83,7 +85,6 @@ int main()
         }
     }
 
-    free(lh);
 	endwin();			/* End curses mode */
 
 	return 0;

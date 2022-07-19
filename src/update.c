@@ -4,7 +4,7 @@ void* updateThread(void* p){
     ListHead *l = (ListHead*) p;
     while(1){
         updateProcList(l);
-        sleep(1);
+        sleep(2);
     }
 }
 
@@ -24,6 +24,7 @@ static u_int64_t getTotalCpuJiffies(){
     u_int64_t totJiffies = 0;
     if(!f && errno){
         printf("Error opening /proc/stat file\n");
+        endwin();
         exit(-1);
     }
 
@@ -38,10 +39,12 @@ static u_int64_t getTotalCpuJiffies(){
         totJiffies+= cpuJiffiesComponent[i];
     */
     
+   totJiffies = cpuJiffiesComponent[0];
+
     free(file_buffer);
     fclose(f);
 
-    return cpuJiffiesComponent[0];
+    return totJiffies;
 }
 
 static u_int64_t getProcessCpuJiffies(char* pid, pt_proc_t * proc, u_int8_t * error){

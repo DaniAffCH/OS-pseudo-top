@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ncurses.h>
 #include "types.h"
 
 void actionHandler(pid_t pid, pt_action action, ListHead* l);
