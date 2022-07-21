@@ -181,6 +181,16 @@ void updateProcList(ListHead * l){
         oldListItem = currentListItem;
         currentListItem = (procListItem*) currentListItem->list.next;
     }
+
+    while(currentListItem){
+        procListItem * remListItem = currentListItem;
+        currentListItem = (procListItem*) currentListItem->list.next;
+        List_detach(l, (ListItem*) remListItem);
+        free(remListItem->info);
+        free(remListItem);
+        ++nFree;
+    }
+
     lastCpuJiffies = currentCpuJiffies;
 
     pthread_mutex_unlock(&listMutex);
