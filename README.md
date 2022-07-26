@@ -1,6 +1,6 @@
 # OS-pseudo-top
 
-A simple command line interface process monitor that allows you to check cpu usage and memory usage for each process.
+A simple unix command line process monitor that allows you to check cpu usage and memory usage for each process.
 
 ## Documenation
 
