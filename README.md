@@ -2,7 +2,13 @@
 
 A simple unix command line process monitor that allows you to check cpu usage and memory usage for each process.
 
-## Documenation
+# Install
+’
+    sudo chmod +x install.sh
+    ./install.sh
+’
+
+## Documentation
 
 - w -> scroll up the process window  
 - s -> scroll down the process window 
