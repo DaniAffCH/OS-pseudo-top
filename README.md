@@ -2,7 +2,7 @@
 
 A simple unix command line process monitor that allows you to check cpu usage and memory usage for each process.
 
-# Install
+## Install
 ```
     sudo chmod +x install.sh
     ./install.sh
